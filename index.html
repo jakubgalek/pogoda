@@ -154,14 +154,15 @@
             font-weight: 400;
         }
         .weather-guy {
-            position: fixed;
-            right: 20px;
-            bottom: 20px;
-            width: 15%;
-            opacity: 0.95;
-            animation: floaty 6s ease-in-out infinite;
-            z-index: 10;
-        }
+			position: fixed;
+			right: 4em;
+			bottom: 7em;
+			width: 150px;
+			opacity: 0.95;
+			animation: floaty 6s ease-in-out infinite;
+			z-index: 10;
+			transition: opacity 0.3s ease;
+		}
         @keyframes floaty {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
@@ -327,8 +328,28 @@
         </div>
     </section>
 
-    <img class='weather-guy' src='https://i.imgur.com/6ElocOl.png' alt='Postać pogody'>
+    <img class='weather-guy' id='weather-icon' src='' alt='Postać pogody'>
+    
     <script>
+        function getWeatherIcon(temp, humidity) {
+            // ❄️ Zima - temperatura poniżej 3°C
+            if (temp < 3) {
+                return 'zima.png';
+            }
+            // 🌧️ Deszczowo - wilgotność powyżej 85%
+            else if (humidity > 85) {
+                return 'deszczowo.png';
+            }
+            // ☁️ Pochmurno - wilgotność 65-85% lub temperatura 3-12°C
+            else if (humidity > 65 || (temp >= 3 && temp < 12)) {
+                return 'pochmurno.png';
+            }
+            // ☀️ Słonecznie - pozostałe przypadki
+            else if (temp > 20) {
+                return 'słonecznie.png';
+            }
+        }
+
         function updateData() {
             fetch('https://thingspeak.mathworks.com/channels/2917455/feed.json?results=1')
                 .then(response => response.json())
@@ -342,14 +363,22 @@
                         document.getElementById('pressure').innerHTML = Math.round(parseFloat(latest.field5)) || '--';
                         
                         // Na zewnątrz (field3, field4) - liczby całkowite
-                        document.getElementById('outside_temperature').innerHTML = Math.round(parseFloat(latest.field3)) || '--';
-                        document.getElementById('outside_humidity').innerHTML = Math.round(parseFloat(latest.field4)) || '--';
+                        const outsideTemp = parseFloat(latest.field3);
+                        const outsideHumidity = parseFloat(latest.field4);
+                        document.getElementById('outside_temperature').innerHTML = Math.round(outsideTemp) || '--';
+                        document.getElementById('outside_humidity').innerHTML = Math.round(outsideHumidity) || '--';
                         
                         // Wybierz mniejsze napięcie z field6 i field7 - 2 miejsca po przecinku
                         const voltage1 = parseFloat(latest.field6) || 999;
                         const voltage2 = parseFloat(latest.field7) || 999;
                         const minVoltage = Math.min(voltage1, voltage2);
                         document.getElementById('outside_voltage').innerHTML = minVoltage < 999 ? minVoltage.toFixed(2) : '--';
+                        
+                        // Aktualizuj ikonę pogody na podstawie temperatury i wilgotności zewnętrznej
+                        if (!isNaN(outsideTemp) && !isNaN(outsideHumidity)) {
+                            const weatherIcon = getWeatherIcon(outsideTemp, outsideHumidity);
+                            document.getElementById('weather-icon').src = weatherIcon;
+                        }
                         
                         // Ostatnia aktualizacja
                         const updateTime = new Date(latest.created_at);
@@ -368,4 +397,5 @@
         setInterval(updateData, 15000);
     </script>
 </body>
+</html>
 </html>
