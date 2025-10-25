@@ -31,6 +31,7 @@
             background-size: 50px 50px;
             animation: float 20s linear infinite;
             pointer-events: none;
+            z-index: 0;
         }
         @keyframes float {
             0% { transform: translate(0, 0); }
@@ -48,6 +49,7 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             position: relative;
             overflow: hidden;
+            z-index: 1;
         }
         header::before {
             content: '';
@@ -81,6 +83,8 @@
             align-items: center;
             justify-content: center;
             gap: 0.5em;
+            position: relative;
+            z-index: 1;
         }
         .data-group {
             display: flex;
@@ -88,6 +92,8 @@
             justify-content: center;
             gap: 25px;
             margin-bottom: 2em;
+            position: relative;
+            z-index: 1;
         }
         .data-container {
             background: rgba(255, 255, 255, 0.15);
@@ -154,6 +160,7 @@
             width: 15%;
             opacity: 0.95;
             animation: floaty 6s ease-in-out infinite;
+            z-index: 10;
         }
         @keyframes floaty {
             0%, 100% { transform: translateY(0); }
@@ -164,6 +171,43 @@
             margin-top: 2em;
             font-size: 0.9em;
             opacity: 0.8;
+            position: relative;
+            z-index: 1;
+        }
+        .charts-section {
+            margin: 3em auto;
+            max-width: 1400px;
+            position: relative;
+            z-index: 1;
+        }
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 1.5em;
+            margin-bottom: 2em;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .chart-container h4 {
+            margin-bottom: 1em;
+            text-align: center;
+            font-weight: 400;
+            font-size: 1.2em;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .chart-container iframe {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            background: white;
+        }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2em;
         }
         @media (max-width: 768px) {
             h1 { font-size: 2em; }
@@ -175,9 +219,12 @@
             }
             .data-container span { font-size: 1.8em; }
             .weather-guy {
-                width: 15%;
+                width: 20%;
                 right: 1em;
                 bottom: 1em;
+            }
+            .chart-grid {
+                grid-template-columns: 1fr;
             }
         }
         @media (max-width: 480px) {
@@ -229,6 +276,57 @@
     <div class='status'>
         <p id='last-update'>Ładowanie danych...</p>
     </div>
+
+    <section class='charts-section'>
+        <h3>📈 Wykresy</h3>
+        
+        <div class='chart-grid'>
+            <div class='chart-container'>
+                <h4>🌡️ Temperatura w domu</h4>
+                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/1?bgcolor=%23ffffff&color=%23d62020&days=8&dynamic=true&title=Temperatura+w+domu+%28%C2%B0C%29&type=line&width=auto&height=260' height='300'></iframe>
+            </div>
+
+            <div class='chart-container'>
+                <h4>💧 Wilgotność w domu</h4>
+                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/2?bgcolor=%23ffffff&color=%233877ff&days=8&dynamic=true&title=Wilgotno%C5%9B%C4%87+w+domu+%28%25%29&type=line&width=auto&height=260' height='300'></iframe>
+            </div>
+        </div>
+
+        <div class='chart-grid'>
+            <div class='chart-container'>
+                <h4>🌳 Temperatura na zewnątrz</h4>
+                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/3?bgcolor=%23ffffff&color=%23d62020&days=8&dynamic=true&title=Temperatura+zewn%C4%99trzna+%28%C2%B0C%29&type=line&width=auto&height=260' height='300'></iframe>
+            </div>
+
+            <div class='chart-container'>
+                <h4>💧 Wilgotność na zewnątrz</h4>
+                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/4?bgcolor=%23ffffff&color=%233877ff&days=8&dynamic=true&title=Wilgotno%C5%9B%C4%87+zewn%C4%99trzna+%28%25%29&type=line&width=auto&height=260' height='300'></iframe>
+            </div>
+        </div>
+
+        <div class='chart-container'>
+            <h4>🌀 Ciśnienie (hPa)</h4>
+            <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/5?bgcolor=%23ffffff&color=%237f7f7f&days=8&dynamic=true&title=Ci%C5%9Bnienie+%28hPa%29&type=line&width=auto&height=260' height='300'></iframe>
+        </div>
+
+        <div class='chart-grid'>
+            <div class='chart-container'>
+                <h4>🔋 Bateria A1</h4>
+                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/6?bgcolor=%23ffffff&color=%237B7BFB&days=8&dynamic=true&title=Bateria+A1&type=line&width=auto&height=260' height='300'></iframe>
+            </div>
+
+            <div class='chart-container'>
+                <h4>🔋 Bateria A2</h4>
+                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/7?bgcolor=%23ffffff&color=%23d62020&days=8&dynamic=true&title=Bateria+A2&type=line&width=auto&height=260' height='300'></iframe>
+            </div>
+        </div>
+
+        <div class='chart-container'>
+            <h4>🔋 Porównanie baterii A1 i A2</h4>
+            <iframe src='https://thingspeak.mathworks.com/apps/matlab_visualizations/623281?height=auto&width=auto' height='300' style='min-height: 300px;'></iframe>
+        </div>
+    </section>
+
     <img class='weather-guy' src='https://i.imgur.com/6ElocOl.png' alt='Postać pogody'>
     <script>
         function updateData() {
@@ -238,16 +336,16 @@
                     if (data.feeds && data.feeds.length > 0) {
                         const latest = data.feeds[0];
                         
-                        // W domu (field1, field2, field5)
-                        document.getElementById('temperature').innerHTML = latest.field1 || '--';
-                        document.getElementById('humidity').innerHTML = latest.field2 || '--';
-                        document.getElementById('pressure').innerHTML = latest.field5 || '--';
+                        // W domu (field1, field2, field5) - liczby całkowite
+                        document.getElementById('temperature').innerHTML = Math.round(parseFloat(latest.field1)) || '--';
+                        document.getElementById('humidity').innerHTML = Math.round(parseFloat(latest.field2)) || '--';
+                        document.getElementById('pressure').innerHTML = Math.round(parseFloat(latest.field5)) || '--';
                         
-                        // Na zewnątrz (field3, field4, field6 lub field7)
-                        document.getElementById('outside_temperature').innerHTML = latest.field3 || '--';
-                        document.getElementById('outside_humidity').innerHTML = latest.field4 || '--';
+                        // Na zewnątrz (field3, field4) - liczby całkowite
+                        document.getElementById('outside_temperature').innerHTML = Math.round(parseFloat(latest.field3)) || '--';
+                        document.getElementById('outside_humidity').innerHTML = Math.round(parseFloat(latest.field4)) || '--';
                         
-                        // Wybierz mniejsze napięcie z field6 i field7
+                        // Wybierz mniejsze napięcie z field6 i field7 - 2 miejsca po przecinku
                         const voltage1 = parseFloat(latest.field6) || 999;
                         const voltage2 = parseFloat(latest.field7) || 999;
                         const minVoltage = Math.min(voltage1, voltage2);
