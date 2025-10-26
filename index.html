@@ -157,13 +157,11 @@
 			position: absolute;
 			right: 9vw;
 			top: 40vh;
-			height: 18vw;
-			width: auto;
+			width: 150px;
 			opacity: 0.95;
 			animation: floaty 6s ease-in-out infinite;
 			z-index: 10;
 			transition: opacity 0.3s ease;
-			object-fit: contain; /* zapobiega rozciąganiu */
 		}
         @keyframes floaty {
             0%, 100% { transform: translateY(0); }
@@ -213,7 +211,7 @@
             gap: 2em;
         }
         @media (max-width: 768px) {
-            h1 { font-size: 2em; }
+            h1 { font-size: 1.5em; }
             .data-group { gap: 15px; }
             .data-container {
                 flex: 1 1 45%;
@@ -224,7 +222,7 @@
             .weather-guy {
                 width: 12vw;
 				right: 3vh;
-				top: 8vw;
+				top: 37vw;
             }
             .chart-grid {
                 grid-template-columns: 1fr;
