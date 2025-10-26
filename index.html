@@ -157,11 +157,13 @@
 			position: absolute;
 			right: 9vw;
 			top: 40vh;
-			width: 150px;
+			height: 18vw;
+			width: auto;
 			opacity: 0.95;
 			animation: floaty 6s ease-in-out infinite;
 			z-index: 10;
 			transition: opacity 0.3s ease;
+			object-fit: contain; /* zapobiega rozciąganiu */
 		}
         @keyframes floaty {
             0%, 100% { transform: translateY(0); }
@@ -221,7 +223,7 @@
             .data-container span { font-size: 1.8em; }
             .weather-guy {
                 width: 12vw;
-				right: 5vh;
+				right: 3vh;
 				top: 8vw;
             }
             .chart-grid {
