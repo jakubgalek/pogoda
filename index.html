@@ -270,7 +270,7 @@
             </div>
             <div class='data-container'>
                 <p>Bateria</p>
-                <span id='outside_voltage'>--</span><span class='unit'>V</span>
+                <span id='outside_voltage'>--</span><span class='unit'>%</span>
             </div>
         </div>
     </section>
@@ -372,7 +372,14 @@
                         const voltage1 = parseFloat(latest.field6) || 999;
                         const voltage2 = parseFloat(latest.field7) || 999;
                         const minVoltage = Math.min(voltage1, voltage2);
-                        document.getElementById('outside_voltage').innerHTML = minVoltage < 999 ? minVoltage.toFixed(2) : '--';
+                        
+                        // Przelicz napięcie na procenty (3V = 0%, 4.2V = 100%)
+                        let batteryPercent = '--';
+                        if (minVoltage < 999) {
+                            const percent = ((minVoltage - 3.0) / (4.2 - 3.0)) * 100;
+                            batteryPercent = Math.round(Math.max(0, Math.min(100, percent))); // Ogranicz do 0-100%
+                        }
+                        document.getElementById('outside_voltage').innerHTML = batteryPercent;
                         
                         // Aktualizuj ikonę pogody na podstawie temperatury i wilgotności zewnętrznej
                         if (!isNaN(outsideTemp) && !isNaN(outsideHumidity)) {
