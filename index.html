@@ -375,9 +375,24 @@
                         
                         // Przelicz napięcie na procenty (3V = 0%, 4.2V = 100%)
                         let batteryPercent = '--';
-                        if (minVoltage < 999) {
-                            const percent = ((minVoltage - 3.0) / (4.2 - 3.0)) * 100;
-                            batteryPercent = Math.round(Math.max(0, Math.min(100, percent))); // Ogranicz do 0-100%
+                         if (minVoltage < 999) {
+                            // Krzywa rozładowania Li-ion 18650: napięcie -> procent
+                            // Bazuje na rzeczywistej charakterystyce rozładowania
+                            let percent;
+                            if (minVoltage >= 4.15) percent = 100;
+                            else if (minVoltage >= 4.05) percent = 95 + (minVoltage - 4.05) * 50;
+                            else if (minVoltage >= 3.95) percent = 85 + (minVoltage - 3.95) * 100;
+                            else if (minVoltage >= 3.85) percent = 75 + (minVoltage - 3.85) * 100;
+                            else if (minVoltage >= 3.75) percent = 60 + (minVoltage - 3.75) * 150;
+                            else if (minVoltage >= 3.65) percent = 45 + (minVoltage - 3.65) * 150;
+                            else if (minVoltage >= 3.55) percent = 30 + (minVoltage - 3.55) * 150;
+                            else if (minVoltage >= 3.45) percent = 20 + (minVoltage - 3.45) * 100;
+                            else if (minVoltage >= 3.35) percent = 10 + (minVoltage - 3.35) * 100;
+                            else if (minVoltage >= 3.20) percent = 5 + (minVoltage - 3.20) * 33.3;
+                            else if (minVoltage >= 3.00) percent = (minVoltage - 3.00) * 25;
+                            else percent = 0;
+                            
+                            batteryPercent = Math.round(Math.max(0, Math.min(100, percent)));
                         }
                         document.getElementById('outside_voltage').innerHTML = batteryPercent;
                         
