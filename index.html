@@ -146,6 +146,7 @@
             padding-right: 0;
             display: inline-block;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: color 0.3s ease;
         }
         .data-container .unit {
             font-size: 1em;
@@ -153,16 +154,24 @@
             color: rgba(255, 255, 255, 0.8);
             font-weight: 400;
         }
+        .battery-low {
+            color: #f94c2e !important;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
         .weather-guy {
-			position: absolute;
-			right: 9vw;
-			top: 40vh;
-			width: 150px;
-			opacity: 0.95;
-			animation: floaty 6s ease-in-out infinite;
-			z-index: 10;
-			transition: opacity 0.3s ease;
-		}
+            position: absolute;
+            right: 9vw;
+            top: 40vh;
+            width: 150px;
+            opacity: 0.95;
+            animation: floaty 6s ease-in-out infinite;
+            z-index: 10;
+            transition: opacity 0.3s ease;
+        }
         @keyframes floaty {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
@@ -221,8 +230,8 @@
             .data-container span { font-size: 1.8em; }
             .weather-guy {
                 width: 12vw;
-				right: 3vh;
-				top: 36vw;
+                right: 3vh;
+                top: 36vw;
             }
             .chart-grid {
                 grid-template-columns: 1fr;
@@ -331,6 +340,39 @@
     <img class='weather-guy' id='weather-icon' src='' alt='Postać pogody'>
     
     <script>
+        function liIonPercent(v) {
+            // Krzywa rozładowania Li-ion 18650
+            const curve = [
+                [4.20, 100],
+                [4.15, 100],
+                [4.05, 95],
+                [3.95, 85],
+                [3.85, 75],
+                [3.75, 60],
+                [3.65, 45],
+                [3.55, 30],
+                [3.45, 20],
+                [3.35, 10],
+                [3.20, 5],
+                [3.00, 0]
+            ];
+            
+            // Jeśli napięcie jest nieprawidłowe, zwróć '--'
+            if (v >= 999 || v < 2.5) return '--';
+            
+            // Interpolacja liniowa między punktami krzywej
+            for (let i = 0; i < curve.length - 1; i++) {
+                const [v1, p1] = curve[i];
+                const [v2, p2] = curve[i + 1];
+                if (v >= v2 && v <= v1) {
+                    return Math.round(p2 + (p1 - p2) * (v - v2) / (v1 - v2));
+                }
+            }
+            
+            // Powyżej maksymalnego napięcia = 100%, poniżej minimalnego = 0%
+            return v >= 4.20 ? 100 : 0;
+        }
+
         function getWeatherIcon(temp, humidity) {
             // ❄️ Zima - temperatura poniżej 3°C
             if (temp < 3) {
@@ -368,33 +410,22 @@
                         document.getElementById('outside_temperature').innerHTML = Math.round(outsideTemp) || '--';
                         document.getElementById('outside_humidity').innerHTML = Math.round(outsideHumidity) || '--';
                         
-                        // Wybierz mniejsze napięcie z field6 i field7 - 2 miejsca po przecinku
+                        // Wybierz mniejsze napięcie z field6 i field7
                         const voltage1 = parseFloat(latest.field6) || 999;
                         const voltage2 = parseFloat(latest.field7) || 999;
                         const minVoltage = Math.min(voltage1, voltage2);
                         
-                        // Przelicz napięcie na procenty (3V = 0%, 4.2V = 100%)
-                        let batteryPercent = '--';
-                         if (minVoltage < 999) {
-                            // Krzywa rozładowania Li-ion 18650: napięcie -> procent
-                            // Bazuje na rzeczywistej charakterystyce rozładowania
-                            let percent;
-                            if (minVoltage >= 4.15) percent = 100;
-                            else if (minVoltage >= 4.05) percent = 95 + (minVoltage - 4.05) * 50;
-                            else if (minVoltage >= 3.95) percent = 85 + (minVoltage - 3.95) * 100;
-                            else if (minVoltage >= 3.85) percent = 75 + (minVoltage - 3.85) * 100;
-                            else if (minVoltage >= 3.75) percent = 60 + (minVoltage - 3.75) * 150;
-                            else if (minVoltage >= 3.65) percent = 45 + (minVoltage - 3.65) * 150;
-                            else if (minVoltage >= 3.55) percent = 30 + (minVoltage - 3.55) * 150;
-                            else if (minVoltage >= 3.45) percent = 20 + (minVoltage - 3.45) * 100;
-                            else if (minVoltage >= 3.35) percent = 10 + (minVoltage - 3.35) * 100;
-                            else if (minVoltage >= 3.20) percent = 5 + (minVoltage - 3.20) * 33.3;
-                            else if (minVoltage >= 3.00) percent = (minVoltage - 3.00) * 25;
-                            else percent = 0;
-                            
-                            batteryPercent = Math.round(Math.max(0, Math.min(100, percent)));
+                        // Przelicz napięcie na procenty baterii
+                        const batteryPercent = liIonPercent(minVoltage);
+                        const batteryElement = document.getElementById('outside_voltage');
+                        batteryElement.innerHTML = batteryPercent;
+                        
+                        // Ostrzeżenie przy niskim stanie baterii
+                        if (batteryPercent !== '--' && batteryPercent < 10) {
+                            batteryElement.classList.add('battery-low');
+                        } else {
+                            batteryElement.classList.remove('battery-low');
                         }
-                        document.getElementById('outside_voltage').innerHTML = batteryPercent;
                         
                         // Aktualizuj ikonę pogody na podstawie temperatury i wilgotności zewnętrznej
                         if (!isNaN(outsideTemp) && !isNaN(outsideHumidity)) {
@@ -419,5 +450,4 @@
         setInterval(updateData, 15000);
     </script>
 </body>
-</html>
 </html>
