@@ -378,16 +378,12 @@
             if (temp < 3) {
                 return 'zima.png';
             }
-            // 🌧️ Deszczowo - wilgotność powyżej 85%
-            else if (humidity > 85) {
-                return 'deszczowo.png';
-            }
-            // ☁️ Pochmurno - wilgotność 65-85% lub temperatura 3-12°C
-            else if (humidity > 65 || (temp >= 3 && temp < 12)) {
+            // ☁️ Pochmurno - temperatura 3-14°C
+            else if (temp >= 3 && temp < 15) {
                 return 'pochmurno.png';
             }
             // ☀️ Słonecznie - pozostałe przypadki
-            else if (temp >= 12) {
+            else if (temp >= 15) {
                 return 'słonecznie.png';
             }
         }
