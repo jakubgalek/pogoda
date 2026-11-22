@@ -71,16 +71,17 @@
   }
   .card-title svg { width: 16px; height: 16px; }
 
-  .hero { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; min-height: 60px; }
+  .hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; min-height: 60px; }
   .hero-val { display: flex; align-items: baseline; gap: 2px; }
   .hero-val .num { font-size: 3.2rem; font-weight: 200; line-height: 1; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
   .hero-val .deg { font-size: 1.4rem; color: var(--muted); font-weight: 300; }
   .hero-label { font-size: .75rem; color: var(--muted); margin-top: 4px; }
-  /* Generowana ikona pogody */
-  .wx { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; min-width: 96px; }
+
+  /* Ikona pogody po drugiej stronie kafelka: ikona na wysokości cyfr, opis pod nią (w linii z podpisem "Temperatura") */
+  .wx { display: flex; flex-direction: column; align-items: center; }
   .wx[hidden] { display: none; }
-  .wx svg { width: 76px; height: 76px; overflow: visible; }
-  .wx span { font-size: .72rem; color: var(--muted); }
+  .wx svg { flex: none; width: 56px; height: 56px; margin: -2.4px 0; overflow: visible; }
+  .wx span { margin-top: 4px; max-width: 9em; text-align: center; line-height: 1.25; font-size: .75rem; color: var(--muted); }
   .wx .spin { transform-box: fill-box; transform-origin: center; animation: spin 24s linear infinite; }
   .wx .bob { animation: bob 6s ease-in-out infinite; }
   .wx .twinkle { animation: twinkle 3s ease-in-out infinite; }
@@ -169,38 +170,6 @@
 
   <div class="grid">
 
-    <!-- W DOMU -->
-    <section class="card">
-      <div class="card-head">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-          W domu
-        </div>
-      </div>
-      <div class="hero">
-        <div>
-          <div class="hero-val"><span class="num" id="temperature">--</span><span class="deg">°C</span></div>
-          <div class="hero-label">Temperatura</div>
-        </div>
-      </div>
-      <div class="metrics">
-        <div class="metric">
-          <div class="lbl">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#6fd3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
-            Wilgotność
-          </div>
-          <div class="val"><span id="humidity">--</span><small>%</small></div>
-        </div>
-        <div class="metric">
-          <div class="lbl">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4"/><path d="M12 6v1M18 12h-1M6 12h1"/></svg>
-            Ciśnienie
-          </div>
-          <div class="val"><span id="pressure">--</span><small>hPa</small></div>
-        </div>
-      </div>
-    </section>
-
     <!-- NA ZEWNĄTRZ -->
     <section class="card">
       <div class="card-head">
@@ -229,8 +198,40 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg>
             Bateria
           </div>
-          <div class="val"><span id="outside_voltage">--</span><small>%</small><small id="volt-raw" style="margin-left:8px"></small></div>
+          <div class="val"><span id="outside_voltage">--</span><small>%</small><small id="volt-raw" style="margin-left:8px;font-size:.88rem"></small></div>
           <div class="bar"><i id="battery-bar"></i></div>
+        </div>
+      </div>
+    </section>
+
+        <!-- W DOMU -->
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+          W domu
+        </div>
+      </div>
+      <div class="hero">
+        <div>
+          <div class="hero-val"><span class="num" id="temperature">--</span><span class="deg">°C</span></div>
+          <div class="hero-label">Temperatura</div>
+        </div>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6fd3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+            Wilgotność
+          </div>
+          <div class="val"><span id="humidity">--</span><small>%</small></div>
+        </div>
+        <div class="metric">
+          <div class="lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4"/><path d="M12 6v1M18 12h-1M6 12h1"/></svg>
+            Ciśnienie
+          </div>
+          <div class="val"><span id="pressure">--</span><small>hPa</small></div>
         </div>
       </div>
     </section>
@@ -475,11 +476,11 @@
      ===================================================== */
   var CHARTS = [
     { title: 'Temperatura', unit: ' °C', dec: 1, minSpan: 4, series: [
-        { k: 'tIn',  l: 'W domu',       c: '#e69a82' },
-        { k: 'tOut', l: 'Na zewnątrz',  c: '#ff5a36' } ] },
+        { k: 'tOut', l: 'Na zewnątrz',  c: '#ff5a36' },
+        { k: 'tIn',  l: 'W domu',       c: '#e69a82' } ] },
     { title: 'Wilgotność', unit: ' %', dec: 0, minSpan: 10, series: [
-        { k: 'hIn',  l: 'W domu',       c: '#8fb4e0' },
-        { k: 'hOut', l: 'Na zewnątrz',  c: '#2f8cff' } ] },
+        { k: 'hOut', l: 'Na zewnątrz',  c: '#2f8cff' },
+        { k: 'hIn',  l: 'W domu',       c: '#8fb4e0' } ] },
     { title: 'Ciśnienie', unit: ' hPa', dec: 0, minSpan: 6, series: [
         { k: 'p',    l: 'Ciśnienie',    c: '#b6a6ff' } ] },
     { title: 'Napięcie baterii', unit: ' V', dec: 2, minSpan: 0.3, series: [
