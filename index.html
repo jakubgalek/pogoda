@@ -1,449 +1,773 @@
 <!DOCTYPE html>
-<html lang='pl'>
+<html lang="pl">
 <head>
-    <meta charset='UTF-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-	<link rel='icon' href='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>'>
-    <title>Stacja pogodowa</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 25%, #3d7edb 50%, #4a9fe5 75%, #56ccf2 100%);
-            color: #FFFFFF;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: float 20s linear infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-        @keyframes float {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-        header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            text-align: center;
-            padding: 1.5em;
-            margin-bottom: 2em;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
-        }
-        header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: shine 30s infinite;
-        }
-        @keyframes shine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-        h1 {
-            font-size: 2.5em;
-            font-weight: 300;
-            letter-spacing: 2px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 1;
-        }
-        h3 {
-            text-align: center;
-            margin: 2.5em 0 1.5em 0;
-            font-size: 1.5em;
-            font-weight: 400;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5em;
-            position: relative;
-            z-index: 1;
-        }
-        .data-group {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 25px;
-            margin-bottom: 2em;
-            position: relative;
-            z-index: 1;
-        }
-        .data-container {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 0;
-            flex: 0 1 180px;
-            min-height: 140px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .data-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        .data-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-        .data-container:hover::before {
-            left: 100%;
-        }
-        .data-container p {
-            margin: 0;
-            padding: 1em;
-            font-weight: 500;
-            font-size: 0.9em;
-            background: rgba(255, 255, 255, 0.2);
-            color: #FFFFFF;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .data-container span {
-            font-size: 2.2em;
-            font-weight: 300;
-            padding: 0.5em;
-            padding-right: 0;
-            display: inline-block;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: color 0.3s ease;
-        }
-        .data-container .unit {
-            font-size: 1em;
-            padding-left: 0.3em;
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: 400;
-        }
-        .battery-low {
-            color: #f94c2e !important;
-            animation: pulse 1s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        .weather-guy {
-            position: absolute;
-            right: 9vw;
-            top: 40vh;
-            width: 150px;
-            opacity: 0.95;
-            animation: floaty 6s ease-in-out infinite;
-            z-index: 10;
-            transition: opacity 0.3s ease;
-        }
-        @keyframes floaty {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        .status {
-            text-align: center;
-            margin-top: 2em;
-            font-size: 0.9em;
-            opacity: 0.8;
-            position: relative;
-            z-index: 1;
-        }
-        .charts-section {
-            margin: 3em auto;
-            max-width: 1400px;
-            position: relative;
-            z-index: 1;
-        }
-        .chart-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 1.5em;
-            margin-bottom: 2em;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        }
-        .chart-container h4 {
-            margin-bottom: 1em;
-            text-align: center;
-            font-weight: 400;
-            font-size: 1.2em;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-        .chart-container iframe {
-            width: 100%;
-            border: none;
-            border-radius: 10px;
-            background: white;
-        }
-        .chart-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 2em;
-        }
-        @media (max-width: 768px) {
-            h1 { font-size: 1.5em; }
-            .data-group { gap: 15px; }
-            .data-container {
-                flex: 1 1 45%;
-                min-width: 150px;
-                min-height: 130px;
-            }
-            .data-container span { font-size: 1.8em; }
-            .weather-guy {
-                width: 12vw;
-                right: 3vh;
-                top: 36vw;
-            }
-            .chart-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        @media (max-width: 480px) {
-            .data-container {
-                flex: 1 1 100%;
-                max-width: 300px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f1419">
+<title>Stacja pogodowa</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
+<style>
+  :root {
+    --bg: #0f1419;
+    --surface: #171d25;
+    --surface-2: #1e2630;
+    --border: #2a3441;
+    --text: #e8edf3;
+    --muted: #8593a3;
+    --accent: #5ab0ff;
+    --ok: #4cd694;
+    --warn: #ffc247;
+    --bad: #ff6b6b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 16px;
+    line-height: 1.4;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  /* Nagłówek */
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 4px 2px 16px;
+  }
+  header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: .2px; }
+  header h1 small { display: block; font-size: .72rem; font-weight: 400; color: var(--muted); margin-top: 2px; }
+  .status {
+    display: flex; align-items: center; gap: 8px; white-space: nowrap;
+    font-size: .75rem; color: var(--muted);
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 999px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); transition: background .3s; }
+  .status.online .dot { background: var(--ok); animation: pulse 2s infinite; }
+  .status.stale .dot { background: var(--warn); }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(76,214,148,.5); }
+    70% { box-shadow: 0 0 0 7px rgba(76,214,148,0); }
+    100% { box-shadow: 0 0 0 0 rgba(76,214,148,0); }
+  }
+
+  /* Karty */
+  .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .8rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted);
+  }
+  .card-title svg { width: 16px; height: 16px; }
+
+  .hero { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; min-height: 60px; }
+  .hero-val { display: flex; align-items: baseline; gap: 2px; }
+  .hero-val .num { font-size: 3.2rem; font-weight: 200; line-height: 1; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+  .hero-val .deg { font-size: 1.4rem; color: var(--muted); font-weight: 300; }
+  .hero-label { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+  /* Generowana ikona pogody */
+  .wx { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; min-width: 96px; }
+  .wx[hidden] { display: none; }
+  .wx svg { width: 76px; height: 76px; overflow: visible; }
+  .wx span { font-size: .72rem; color: var(--muted); }
+  .wx .spin { transform-box: fill-box; transform-origin: center; animation: spin 24s linear infinite; }
+  .wx .bob { animation: bob 6s ease-in-out infinite; }
+  .wx .twinkle { animation: twinkle 3s ease-in-out infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+  @keyframes twinkle { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .wx * { animation: none !important; } }
+
+  .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .metric { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+  .metric .lbl {
+    display: flex; align-items: center; gap: 6px;
+    font-size: .68rem; text-transform: uppercase; letter-spacing: .8px; color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .metric .lbl svg { width: 13px; height: 13px; }
+  .metric .val { font-size: 1.15rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .metric .val small { font-size: .72rem; font-weight: 400; color: var(--muted); margin-left: 2px; }
+  .metric.wide { grid-column: 1 / -1; }
+
+  .bar { height: 6px; border-radius: 999px; background: var(--border); margin-top: 8px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--ok); transition: width .6s ease, background .3s; }
+  .battery-low { color: var(--bad); animation: blink 1s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+  /* Wykresy */
+  .charts-head {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    margin: 28px 2px 12px;
+  }
+  .charts-head h2 { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .range { display: inline-flex; max-width: 100%; overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 3px; scrollbar-width: none; }
+  .range::-webkit-scrollbar { display: none; }
+  .range button { white-space: nowrap; }
+  .range button {
+    font: inherit; font-size: .75rem; font-weight: 500;
+    color: var(--muted); background: transparent; border: 0; border-radius: 999px;
+    padding: 5px 14px; cursor: pointer; transition: background .2s, color .2s;
+  }
+  .range button:hover { color: var(--text); }
+  .range button.active { background: var(--accent); color: #07121d; }
+
+  .chart-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 720px) { .chart-grid { grid-template-columns: 1fr 1fr; } }
+
+  .chart {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 14px 10px;
+    min-width: 0;
+  }
+  .chart-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chart-top h3 { font-size: .8rem; font-weight: 600; color: var(--text); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .72rem; color: var(--muted); }
+  .legend .it { display: inline-flex; align-items: baseline; gap: 6px; }
+  .legend .sw { width: 8px; height: 8px; border-radius: 50%; align-self: center; }
+  .legend b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .legend em { font-style: normal; font-size: .66rem; opacity: .85; font-variant-numeric: tabular-nums; }
+
+  .chart-wrap { position: relative; height: 210px; }
+  .chart-wrap canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: crosshair; }
+  .tip {
+    position: absolute; top: 6px; display: none; pointer-events: none; z-index: 2;
+    background: rgba(15,20,25,.94); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 9px; font-size: .72rem; white-space: nowrap; box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  }
+  .tip .t { color: var(--muted); margin-bottom: 3px; }
+  .tip .r { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+  .tip .r i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .tip .r b { margin-left: auto; padding-left: 10px; font-weight: 600; }
+  .msg {
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    font-size: .78rem; color: var(--muted); background: rgba(23,29,37,.7); border-radius: 10px;
+  }
+
+</style>
 </head>
 <body>
-    <header>
-        <h1>Stacja pogodowa</h1>
-    </header>
-    <section>
-        <h3><span>🏠</span> W domu</h3>
-        <div class='data-group'>
-            <div class='data-container'>
-                <p>Temperatura</p>
-                <span id='temperature'>--</span><span class='unit'>°C</span>
-            </div>
-            <div class='data-container'>
-                <p>Wilgotność</p>
-                <span id='humidity'>--</span><span class='unit'>%</span>
-            </div>
-            <div class='data-container'>
-                <p>Ciśnienie</p>
-                <span id='pressure'>--</span><span class='unit'>hPa</span>
-            </div>
+<div class="wrap">
+
+  <header>
+    <h1>Stacja pogodowa<small id="last-update">Ładowanie danych…</small></h1>
+    <div class="status" id="status"><span class="dot"></span><span id="status-text">Offline</span></div>
+  </header>
+
+  <div class="grid">
+
+    <!-- W DOMU -->
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+          W domu
         </div>
-    </section>
-    <section>
-        <h3><span>🌳</span> Na zewnątrz</h3>
-        <div class='data-group'>
-            <div class='data-container'>
-                <p>Temperatura</p>
-                <span id='outside_temperature'>--</span><span class='unit'>°C</span>
-            </div>
-            <div class='data-container'>
-                <p>Wilgotność</p>
-                <span id='outside_humidity'>--</span><span class='unit'>%</span>
-            </div>
-            <div class='data-container'>
-                <p>Bateria</p>
-                <span id='outside_voltage'>--</span><span class='unit'>%</span>
-            </div>
+      </div>
+      <div class="hero">
+        <div>
+          <div class="hero-val"><span class="num" id="temperature">--</span><span class="deg">°C</span></div>
+          <div class="hero-label">Temperatura</div>
         </div>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6fd3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+            Wilgotność
+          </div>
+          <div class="val"><span id="humidity">--</span><small>%</small></div>
+        </div>
+        <div class="metric">
+          <div class="lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4"/><path d="M12 6v1M18 12h-1M6 12h1"/></svg>
+            Ciśnienie
+          </div>
+          <div class="val"><span id="pressure">--</span><small>hPa</small></div>
+        </div>
+      </div>
     </section>
-    <div class='status'>
-        <p id='last-update'>Ładowanie danych...</p>
+
+    <!-- NA ZEWNĄTRZ -->
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12c-4 0-6-2.5-6-6 4 0 6 2.5 6 6z"/><path d="M12 15c4 0 6-2.5 6-6-4 0-6 2.5-6 6z"/></svg>
+          Na zewnątrz
+        </div>
+      </div>
+      <div class="hero">
+        <div>
+          <div class="hero-val"><span class="num" id="outside_temperature">--</span><span class="deg">°C</span></div>
+          <div class="hero-label">Temperatura</div>
+        </div>
+        <div class="wx" id="weather" hidden></div>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6fd3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+            Wilgotność
+          </div>
+          <div class="val"><span id="outside_humidity">--</span><small>%</small></div>
+        </div>
+        <div class="metric">
+          <div class="lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg>
+            Bateria
+          </div>
+          <div class="val"><span id="outside_voltage">--</span><small>%</small><small id="volt-raw" style="margin-left:8px"></small></div>
+          <div class="bar"><i id="battery-bar"></i></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- WYKRESY -->
+  <div class="charts-head">
+    <h2>Wykresy</h2>
+    <div class="range" id="range">
+      <button data-days="1">24 h</button>
+      <button data-days="7" class="active">7 dni</button>
+      <button data-days="30">30 dni</button>
+      <button data-days="183">6 mies.</button>
+      <button data-days="365">Rok</button>
+      <button data-days="1825">5 lat</button>
     </div>
+  </div>
 
-    <section class='charts-section'>
-        <h3>📈 Wykresy</h3>
-        
-        <div class='chart-grid'>
-            <div class='chart-container'>
-                <h4>🌡️ Temperatura w domu</h4>
-                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/1?bgcolor=%23ffffff&color=%23d62020&days=8&dynamic=true&title=&type=line&width=auto&height=260' height='300'></iframe>
-            </div>
+  <div class="chart-grid" id="charts"></div>
 
-            <div class='chart-container'>
-                <h4>💧 Wilgotność w domu</h4>
-                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/2?bgcolor=%23ffffff&color=%233877ff&days=8&dynamic=true&title=&type=line&width=auto&height=260' height='300'></iframe>
-            </div>
-        </div>
+</div>
 
-        <div class='chart-grid'>
-            <div class='chart-container'>
-                <h4>🌳 Temperatura na zewnątrz</h4>
-                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/3?bgcolor=%23ffffff&color=%23d62020&days=8&dynamic=true&title=&type=&line&width=auto&height=260' height='300'></iframe>
-            </div>
+<script>
+  var CHANNEL = 2917455;
+  var STALE_MIN = 5;   // po ilu minutach bez nowych danych uznać stację za nieaktywną
+  var days = 7;
 
-            <div class='chart-container'>
-                <h4>💧 Wilgotność na zewnątrz</h4>
-                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/4?bgcolor=%23ffffff&color=%233877ff&days=8&dynamic=true&title=&type=line&width=auto&height=260' height='300'></iframe>
-            </div>
-        </div>
+  /* =====================================================
+     Pomocnicze
+     ===================================================== */
+  function $(id) { return document.getElementById(id); }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }
+  function fmt(v) {
+    var n = parseFloat(v);
+    return isNaN(n) ? '--' : String(Math.round(n));   // 0 °C też jest poprawną wartością
+  }
+  function hexToRgba(hex, a) {
+    var n = parseInt(hex.slice(1), 16);
+    return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+  }
+  function fmtDate(t, withTime, withYear) {
+    var d = new Date(t);
+    var s = pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + (withYear ? '.' + d.getFullYear() : '');
+    return withTime ? s + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) : s;
+  }
+  function fmtHour(t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 
-        <div class='chart-container'>
-            <h4>🌀 Ciśnienie (hPa)</h4>
-            <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/5?bgcolor=%23ffffff&color=%237f7f7f&days=8&dynamic=true&title=&type=line&width=auto&height=260' height='300'></iframe>
-        </div>
+  function setStatus(state, text) {
+    $('status').className = 'status ' + state;
+    $('status-text').textContent = text;
+  }
 
-        <div class='chart-grid'>
-            <div class='chart-container'>
-                <h4>🔋 Bateria A1</h4>
-                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/6?bgcolor=%23ffffff&color=%237B7BFB&days=8&dynamic=true&title=&width=auto&height=260' height='300'></iframe>
-            </div>
+  /* =====================================================
+     Bateria / ikona pogody
+     ===================================================== */
+  function liIonPercent(v) {
+    // Krzywa rozładowania Li-ion 18650
+    var curve = [
+      [4.20, 100], [4.15, 100], [4.05, 95], [3.95, 85], [3.85, 75], [3.75, 60],
+      [3.65, 45],  [3.55, 30],  [3.45, 20], [3.35, 10], [3.20, 5],  [3.00, 0]
+    ];
+    if (v >= 999 || v < 2.5) return null;
+    for (var i = 0; i < curve.length - 1; i++) {
+      var v1 = curve[i][0], p1 = curve[i][1], v2 = curve[i + 1][0], p2 = curve[i + 1][1];
+      if (v >= v2 && v <= v1) return Math.round(p2 + (p1 - p2) * (v - v2) / (v1 - v2));
+    }
+    return v >= 4.20 ? 100 : 0;
+  }
 
-            <div class='chart-container'>
-                <h4>🔋 Bateria A2</h4>
-                <iframe src='https://thingspeak.mathworks.com/channels/2917455/charts/7?bgcolor=%23ffffff&color=%23d62020&days=8&dynamic=true&title=&type=line&width=auto&height=260' height='300'></iframe>
-            </div>
-        </div>
+  /* ---------- Generowana ikona pogody ---------- */
+  var LAT = 52.0, LON = 19.5;   // ustaw swoją lokalizację – służy do rozpoznania dnia i nocy
+  var pressureTrend = null;     // zmiana ciśnienia w ostatnich ~3 h [hPa]
+  var lastWx = null;
 
-        <div class='chart-container'>
-            <h4>🔋 Porównanie baterii A1 i A2</h4>
-            <iframe src='https://thingspeak.mathworks.com/apps/matlab_visualizations/623281?height=auto&width=auto' height='300' style='min-height: 300px;'></iframe>
-        </div>
-    </section>
+  function isNight(date) {
+    var rad = Math.PI / 180;
+    var N = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+    var B = 360 / 365 * (N - 81) * rad;
+    var decl = 23.44 * Math.sin(B) * rad;
+    var cosH = Math.max(-1, Math.min(1, -Math.tan(LAT * rad) * Math.tan(decl)));
+    var half = Math.acos(cosH) / rad / 15;                                  // pół długości dnia [h]
+    var eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B); // równanie czasu [min]
+    var noon = 12 - LON / 15 - eot / 60;                                    // południe słoneczne [h UTC]
+    var h = date.getUTCHours() + date.getUTCMinutes() / 60;
+    return h < noon - half || h > noon + half;
+  }
 
-    <img class='weather-guy' id='weather-icon' src='' alt='Postać pogody'>
-    
-    <script>
-        function liIonPercent(v) {
-            // Krzywa rozładowania Li-ion 18650
-            const curve = [
-                [4.20, 100],
-                [4.15, 100],
-                [4.05, 95],
-                [3.95, 85],
-                [3.85, 75],
-                [3.75, 60],
-                [3.65, 45],
-                [3.55, 30],
-                [3.45, 20],
-                [3.35, 10],
-                [3.20, 5],
-                [3.00, 0]
-            ];
-            
-            // Jeśli napięcie jest nieprawidłowe, zwróć '--'
-            if (v >= 999 || v < 2.5) return '--';
-            
-            // Interpolacja liniowa między punktami krzywej
-            for (let i = 0; i < curve.length - 1; i++) {
-                const [v1, p1] = curve[i];
-                const [v2, p2] = curve[i + 1];
-                if (v >= v2 && v <= v1) {
-                    return Math.round(p2 + (p1 - p2) * (v - v2) / (v1 - v2));
-                }
-            }
-            
-            // Powyżej maksymalnego napięcia = 100%, poniżej minimalnego = 0%
-            return v >= 4.20 ? 100 : 0;
+  // Szacunek zachmurzenia z temperatury, wilgotności, pory dnia i ciśnienia.
+  // Opadów celowo NIE rozpoznajemy – wilgotność nie mówi, czy aktualnie pada.
+  function classifyWeather(w, night) {
+    // Punkt rosy (wzór Magnusa): im bliżej temperatury powietrza, tym niższa podstawa chmur
+    var gamma = Math.log(Math.max(w.hum, 1) / 100) + 17.62 * w.temp / (243.12 + w.temp);
+    var dew = 243.12 * gamma / (17.62 - gamma);
+    var spread = w.temp - dew;                                   // 0 °C = powietrze nasycone
+    var c = 1 - (spread - 0.5) / 6;                              // 0 = bezchmurnie, 1 = całkowite zachmurzenie
+
+    if (night) c -= 0.15;                                        // w nocy wilgotność rośnie też przy czystym niebie
+    if (w.pres !== null) { if (w.pres >= 1020) c -= 0.15; else if (w.pres < 1005) c += 0.15; }
+    if (pressureTrend !== null) { if (pressureTrend <= -2) c += 0.2; else if (pressureTrend >= 2) c -= 0.15; }
+    c = Math.max(0, Math.min(1, c));
+
+    var kind, label;
+
+    if (c >= 0.75) { kind = 'cloudy'; label = 'Pochmurno'; }
+    else if (c >= 0.3)  { kind = 'partly'; label = 'Częściowe zachmurzenie'; }
+    else {
+      kind = 'clear';
+      label = night ? 'Bezchmurnie' : (w.temp >= 28 ? 'Upalnie' : (w.temp <= -8 ? 'Mroźnie' : 'Słonecznie'));
+    }
+    return { kind: kind, label: label };
+  }
+
+  function weatherSvg(kind, night, temp, standalone) {
+    var CL = '#d5dde7', CLD = '#8a98aa', MOON = '#f3e9b8';
+    var SUN = temp >= 28 ? '#ff8a3d' : '#ffc247';
+
+    function cloud(fill, tr) {
+      return '<g transform="' + tr + '"><g class="bob" fill="' + fill + '">' +
+        '<circle cx="23" cy="41" r="8"/><circle cx="34" cy="33" r="11"/><circle cx="45" cy="40" r="9"/>' +
+        '<rect x="23" y="41" width="22" height="8"/></g></g>';
+    }
+    function sun(cx, cy, r, a, b) {
+      var s = '<g class="spin" stroke="' + SUN + '" stroke-width="3" stroke-linecap="round">';
+      for (var i = 0; i < 8; i++) {
+        var ang = i * Math.PI / 4, ca = Math.cos(ang), sa = Math.sin(ang);
+        s += '<line x1="' + (cx + ca * a).toFixed(1) + '" y1="' + (cy + sa * a).toFixed(1) +
+             '" x2="' + (cx + ca * b).toFixed(1) + '" y2="' + (cy + sa * b).toFixed(1) + '"/>';
+      }
+      return s + '</g><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + SUN + '"/>';
+    }
+    function moon(tr) {
+      return '<path transform="' + tr + '" fill="' + MOON + '" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+    }
+    function stars() {
+      return '<circle class="twinkle" cx="52" cy="14" r="1.8" fill="#fff"/>' +
+             '<circle class="twinkle" cx="56" cy="30" r="1.3" fill="#fff" style="animation-delay:.8s"/>' +
+             '<circle class="twinkle" cx="12" cy="12" r="1.3" fill="#fff" style="animation-delay:1.6s"/>';
+    }
+
+    var inner = '';
+    if (kind === 'clear') {
+      inner = night ? moon('translate(8 6) scale(2)') + stars() : sun(32, 32, 10, 15, 23);
+    } else if (kind === 'partly') {
+      inner = (night ? moon('translate(4 5) scale(1.5)') : sun(23, 23, 8, 12, 17)) + cloud(CL, 'translate(8 12) scale(.85)');
+    } else if (kind === 'cloudy') {
+      inner = cloud(CLD, 'translate(12 -6) scale(.8)') + cloud(CL, 'translate(-2 6) scale(.95)');
+    }
+    return '<svg ' + (standalone ? 'xmlns="http://www.w3.org/2000/svg" ' : '') + 'viewBox="0 0 64 64" aria-hidden="true">' + inner + '</svg>';
+  }
+
+  function renderWeather() {
+    var el = $('weather'), fav = document.querySelector('link[rel=icon]');
+    if (!lastWx || isNaN(lastWx.temp) || isNaN(lastWx.hum)) {
+      el.hidden = true;
+      document.title = 'Stacja pogodowa';
+      return;
+    }
+    var night = isNight(new Date());
+    var w = classifyWeather(lastWx, night);
+    el.innerHTML = weatherSvg(w.kind, night, lastWx.temp, false) + '<span>' + w.label + '</span>';
+    el.hidden = false;
+    el.title = 'Szacunek zachmurzenia z temperatury, wilgotności, pory dnia i ciśnienia (bez opadów)';
+    document.title = Math.round(lastWx.temp) + '°C · Stacja pogodowa';
+    if (fav) fav.href = 'data:image/svg+xml,' + encodeURIComponent(weatherSvg(w.kind, night, lastWx.temp, true));
+  }
+
+  // Trend ciśnienia z ostatnich ~3 godzin (poprawia szacowanie zachmurzenia)
+  function updateTrend() {
+    fetch('https://api.thingspeak.com/channels/' + CHANNEL + '/fields/5.json?minutes=190&median=10')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var first = null, last = null;
+        (d.feeds || []).forEach(function (f) {
+          var v = num(f.field5);
+          if (v === null || v <= 0) return;
+          var p = { t: new Date(f.created_at).getTime(), v: v };
+          if (!first) first = p;
+          last = p;
+        });
+        pressureTrend = (first && last && last.t - first.t >= 90 * 60000)
+          ? (last.v - first.v) * (180 * 60000) / (last.t - first.t) : null;
+        renderWeather();
+      })
+      .catch(function () {});
+  }
+
+  /* =====================================================
+     Aktualne dane
+     ===================================================== */
+  function updateData() {
+    fetch('https://api.thingspeak.com/channels/' + CHANNEL + '/feeds.json?results=1')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.feeds || !data.feeds.length) return;
+        var f = data.feeds[0];
+
+        $('temperature').textContent = fmt(f.field1);
+        $('humidity').textContent    = fmt(f.field2);
+        $('pressure').textContent    = fmt(f.field5);
+
+        // Niższe z dwóch napięć (0 / brak = nieprawidłowe)
+        var v1 = parseFloat(f.field6) || 999;
+        var v2 = parseFloat(f.field7) || 999;
+        var vMin = Math.min(v1, v2);
+        var pct = liIonPercent(vMin);
+
+        // Brak napięcia = brak odbioru z czujnika zewnętrznego, więc nie pokazujemy zer
+        var rf = pct !== null;
+        var outTemp = rf ? parseFloat(f.field3) : NaN;
+        var outHum  = rf ? parseFloat(f.field4) : NaN;
+        $('outside_temperature').textContent = fmt(outTemp);
+        $('outside_humidity').textContent    = fmt(outHum);
+
+        var batEl = $('outside_voltage'), bar = $('battery-bar');
+        batEl.textContent = pct === null ? '--' : pct;
+        $('volt-raw').textContent = pct === null ? '' : '· ' + vMin.toFixed(2) + ' V';
+        bar.style.width = (pct === null ? 0 : pct) + '%';
+        bar.style.background = pct === null ? 'var(--border)' : (pct < 10 ? 'var(--bad)' : (pct < 30 ? 'var(--warn)' : 'var(--ok)'));
+        batEl.classList.toggle('battery-low', pct !== null && pct < 10);
+
+        var pr = num(f.field5);
+        lastWx = { temp: outTemp, hum: outHum, pres: (pr !== null && pr > 0) ? pr : null };
+        renderWeather();
+
+        var t = new Date(f.created_at);
+        $('last-update').textContent = 'Ostatni pomiar: ' + t.toLocaleString('pl-PL');
+        var ageMin = (Date.now() - t.getTime()) / 60000;
+        if (ageMin > STALE_MIN) setStatus('stale', 'Brak nowych danych');
+        else setStatus('online', 'Online');
+      })
+      .catch(function (err) {
+        console.error('Błąd pobierania danych:', err);
+        $('last-update').textContent = 'Błąd połączenia z serwerem';
+        setStatus('', 'Offline');
+      });
+  }
+
+  /* =====================================================
+     Wykresy (canvas, bez bibliotek)
+     ===================================================== */
+  var CHARTS = [
+    { title: 'Temperatura', unit: ' °C', dec: 1, minSpan: 4, series: [
+        { k: 'tIn',  l: 'W domu',       c: '#e69a82' },
+        { k: 'tOut', l: 'Na zewnątrz',  c: '#ff5a36' } ] },
+    { title: 'Wilgotność', unit: ' %', dec: 0, minSpan: 10, series: [
+        { k: 'hIn',  l: 'W domu',       c: '#8fb4e0' },
+        { k: 'hOut', l: 'Na zewnątrz',  c: '#2f8cff' } ] },
+    { title: 'Ciśnienie', unit: ' hPa', dec: 0, minSpan: 6, series: [
+        { k: 'p',    l: 'Ciśnienie',    c: '#b6a6ff' } ] },
+    { title: 'Napięcie baterii', unit: ' V', dec: 2, minSpan: 0.3, series: [
+        { k: 'v1',   l: 'A1',           c: '#4cd694' },
+        { k: 'v2',   l: 'A2',           c: '#f2d34f' } ] }
+  ];
+
+  // Mediana w oknach czasowych (odporna na zera, gdy brak odbioru RF)
+  var MEDIAN = { 1: 10, 7: 60, 30: 240, 183: 240, 365: 720, 1825: 1440 };
+
+  function Chart(cfg, parent) {
+    var self = this;
+    this.cfg = cfg;
+    this.rows = [];
+    this.hover = null;
+    this.stepMs = 3600000;
+
+    var el = document.createElement('div');
+    el.className = 'chart';
+    el.innerHTML =
+      '<div class="chart-top"><h3>' + cfg.title + '</h3><div class="legend"></div></div>' +
+      '<div class="chart-wrap"><canvas></canvas><div class="tip"></div><div class="msg"></div></div>';
+    parent.appendChild(el);
+
+    this.legend = el.querySelector('.legend');
+    this.wrap   = el.querySelector('.chart-wrap');
+    this.canvas = el.querySelector('canvas');
+    this.tip    = el.querySelector('.tip');
+    this.msg    = el.querySelector('.msg');
+    this.ctx    = this.canvas.getContext('2d');
+
+    this.canvas.addEventListener('pointermove', function (e) { self.onMove(e); });
+    this.canvas.addEventListener('pointerdown', function (e) { self.onMove(e); });
+    this.canvas.addEventListener('pointerleave', function () { self.hover = null; self.tip.style.display = 'none'; self.draw(); });
+    this.buildLegend(null);
+  }
+
+  Chart.prototype.showMsg = function (text) {
+    this.msg.textContent = text || '';
+    this.msg.style.display = text ? 'flex' : 'none';
+  };
+
+  Chart.prototype.setData = function (rows, stepMs) {
+    this.rows = rows;
+    this.stepMs = stepMs;
+    this.hover = null;
+    this.tip.style.display = 'none';
+    this.buildLegend(true);
+    this.draw();
+  };
+
+  Chart.prototype.fmtVal = function (v) {
+    return v === null || v === undefined ? '--' : v.toFixed(this.cfg.dec) + this.cfg.unit;
+  };
+
+  Chart.prototype.buildLegend = function (hasData) {
+    var html = '';
+    for (var s = 0; s < this.cfg.series.length; s++) {
+      var se = this.cfg.series[s], last = null, mn = Infinity, mx = -Infinity;
+      if (hasData) {
+        for (var i = 0; i < this.rows.length; i++) {
+          var v = this.rows[i][se.k];
+          if (v === null) continue;
+          last = v; if (v < mn) mn = v; if (v > mx) mx = v;
         }
+      }
+      var range = last === null ? '' :
+        '<em>' + mn.toFixed(this.cfg.dec) + ' – ' + mx.toFixed(this.cfg.dec) + '</em>';
+      html += '<span class="it"><span class="sw" style="background:' + se.c + '"></span>' +
+              se.l + ' <b>' + this.fmtVal(last) + '</b> ' + range + '</span>';
+    }
+    this.legend.innerHTML = html;
+  };
 
-        function getWeatherIcon(temp, humidity) {
-            // ❄️ Zima - temperatura poniżej 3°C
-            if (temp < 3) {
-                return 'zima.png';
-            }
-            // ☁️ Pochmurno - temperatura 3-14°C
-            else if (temp >= 3 && temp < 15) {
-                return 'pochmurno.png';
-            }
-            // ☀️ Słonecznie - pozostałe przypadki
-            else if (temp >= 15) {
-                return 'słonecznie.png';
-            }
-        }
+  Chart.prototype.geom = function () {
+    return { l: 42, r: 10, t: 8, b: 22, w: this.wrap.clientWidth, h: this.wrap.clientHeight };
+  };
 
-        function updateData() {
-            fetch('https://api.thingspeak.com/channels/2917455/feeds.json?results=1')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.feeds && data.feeds.length > 0) {
-                        const latest = data.feeds[0];
-                        
-                        // W domu (field1, field2, field5) - liczby całkowite
-                        document.getElementById('temperature').innerHTML = Math.round(parseFloat(latest.field1)) || '--';
-                        document.getElementById('humidity').innerHTML = Math.round(parseFloat(latest.field2)) || '--';
-                        document.getElementById('pressure').innerHTML = Math.round(parseFloat(latest.field5)) || '--';
-                        
-                        // Na zewnątrz (field3, field4) - liczby całkowite
-                        const outsideTemp = parseFloat(latest.field3);
-                        const outsideHumidity = parseFloat(latest.field4);
-                        document.getElementById('outside_temperature').innerHTML = Math.round(outsideTemp) || '--';
-                        document.getElementById('outside_humidity').innerHTML = Math.round(outsideHumidity) || '--';
-                        
-                        // Wybierz mniejsze napięcie z field6 i field7
-                        const voltage1 = parseFloat(latest.field6) || 999;
-                        const voltage2 = parseFloat(latest.field7) || 999;
-                        const minVoltage = Math.min(voltage1, voltage2);
-                        
-                        // Przelicz napięcie na procenty baterii
-                        const batteryPercent = liIonPercent(minVoltage);
-                        const batteryElement = document.getElementById('outside_voltage');
-                        batteryElement.innerHTML = batteryPercent;
-                        
-                        // Ostrzeżenie przy niskim stanie baterii
-                        if (batteryPercent !== '--' && batteryPercent < 10) {
-                            batteryElement.classList.add('battery-low');
-                        } else {
-                            batteryElement.classList.remove('battery-low');
-                        }
-                        
-                        // Aktualizuj ikonę pogody na podstawie temperatury i wilgotności zewnętrznej
-                        if (!isNaN(outsideTemp) && !isNaN(outsideHumidity)) {
-                            const weatherIcon = getWeatherIcon(outsideTemp, outsideHumidity);
-                            document.getElementById('weather-icon').src = weatherIcon;
-                        }
-                        
-                        // Ostatnia aktualizacja
-                        const updateTime = new Date(latest.created_at);
-                        document.getElementById('last-update').innerHTML = 
-                            'Ostatnia aktualizacja: ' + updateTime.toLocaleString('pl-PL');
-                    }
-                })
-                .catch(error => {
-                    console.error('Błąd pobierania danych:', error);
-                    document.getElementById('last-update').innerHTML = 'Błąd połączenia z serwerem';
-                });
+  Chart.prototype.yRange = function () {
+    var mn = Infinity, mx = -Infinity;
+    for (var i = 0; i < this.rows.length; i++) {
+      for (var s = 0; s < this.cfg.series.length; s++) {
+        var v = this.rows[i][this.cfg.series[s].k];
+        if (v === null) continue;
+        if (v < mn) mn = v; if (v > mx) mx = v;
+      }
+    }
+    if (mn === Infinity) return null;
+    var span = mx - mn;
+    if (span < this.cfg.minSpan) {
+      var mid = (mx + mn) / 2;
+      mn = mid - this.cfg.minSpan / 2; mx = mid + this.cfg.minSpan / 2; span = this.cfg.minSpan;
+    }
+    return { min: mn - span * 0.08, max: mx + span * 0.08 };
+  };
+
+  Chart.prototype.draw = function () {
+    var g = this.geom(), ctx = this.ctx, dpr = window.devicePixelRatio || 1;
+    if (!g.w || !g.h) return;
+    this.canvas.width = Math.round(g.w * dpr);
+    this.canvas.height = Math.round(g.h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, g.w, g.h);
+    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+
+    var rows = this.rows, yr = this.yRange();
+    if (!rows.length || !yr) {
+      ctx.fillStyle = '#8593a3'; ctx.textAlign = 'center';
+      ctx.fillText('Brak danych', g.w / 2, g.h / 2);
+      return;
+    }
+
+    var t0 = rows[0].t, t1 = rows[rows.length - 1].t, plotW = g.w - g.l - g.r, plotH = g.h - g.t - g.b;
+    if (t1 === t0) t1 = t0 + 1;
+    var X = function (t) { return g.l + (t - t0) / (t1 - t0) * plotW; };
+    var Y = function (v) { return g.t + (1 - (v - yr.min) / (yr.max - yr.min)) * plotH; };
+
+    // Siatka pozioma + etykiety osi Y
+    ctx.strokeStyle = '#232c38'; ctx.lineWidth = 1;
+    ctx.fillStyle = '#8593a3'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    var ticks = 4;
+    for (var i = 0; i <= ticks; i++) {
+      var val = yr.min + (yr.max - yr.min) * i / ticks, y = Math.round(Y(val)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(g.l, y); ctx.lineTo(g.w - g.r, y); ctx.stroke();
+      ctx.fillText(val.toFixed(this.cfg.dec), g.l - 6, y);
+    }
+
+    // Etykiety osi X
+    ctx.textBaseline = 'alphabetic';
+    var xt = Math.max(2, Math.min(5, Math.floor(plotW / 90)));
+    for (var j = 0; j <= xt; j++) {
+      var tt = t0 + (t1 - t0) * j / xt;
+      ctx.textAlign = j === 0 ? 'left' : (j === xt ? 'right' : 'center');
+      ctx.fillText(days <= 1 ? fmtHour(tt) : fmtDate(tt, false, days >= 183), X(tt), g.h - 6);
+    }
+
+    // Serie
+    var gapMs = this.stepMs * 3;
+    for (var s = 0; s < this.cfg.series.length; s++) {
+      var se = this.cfg.series[s], segs = [], cur = [], prevT = null;
+      for (var r = 0; r < rows.length; r++) {
+        var v = rows[r][se.k];
+        if (v === null || (prevT !== null && rows[r].t - prevT > gapMs)) {
+          if (cur.length) segs.push(cur); cur = [];
         }
-        
-        // Aktualizuj dane co 15 sekund
-        updateData();
-        setInterval(updateData, 15000);
-    </script>
+        if (v !== null) { cur.push([X(rows[r].t), Y(v)]); prevT = rows[r].t; }
+      }
+      if (cur.length) segs.push(cur);
+
+      var grad = ctx.createLinearGradient(0, g.t, 0, g.t + plotH);
+      grad.addColorStop(0, hexToRgba(se.c, 0.22));
+      grad.addColorStop(1, hexToRgba(se.c, 0));
+
+      for (var q = 0; q < segs.length; q++) {
+        var sg = segs[q];
+        if (sg.length === 1) {
+          ctx.fillStyle = se.c; ctx.beginPath(); ctx.arc(sg[0][0], sg[0][1], 2, 0, 6.2832); ctx.fill();
+          continue;
+        }
+        // wypełnienie
+        ctx.beginPath(); ctx.moveTo(sg[0][0], g.t + plotH);
+        for (var a = 0; a < sg.length; a++) ctx.lineTo(sg[a][0], sg[a][1]);
+        ctx.lineTo(sg[sg.length - 1][0], g.t + plotH); ctx.closePath();
+        ctx.fillStyle = grad; ctx.fill();
+        // linia
+        ctx.beginPath(); ctx.moveTo(sg[0][0], sg[0][1]);
+        for (var b = 1; b < sg.length; b++) ctx.lineTo(sg[b][0], sg[b][1]);
+        ctx.strokeStyle = se.c; ctx.lineWidth = 1.8; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke();
+      }
+    }
+
+    // Kursor
+    if (this.hover !== null) {
+      var row = rows[this.hover], hx = X(row.t);
+      ctx.strokeStyle = 'rgba(232,237,243,.35)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(Math.round(hx) + 0.5, g.t); ctx.lineTo(Math.round(hx) + 0.5, g.t + plotH); ctx.stroke();
+      ctx.setLineDash([]);
+      for (var k = 0; k < this.cfg.series.length; k++) {
+        var sv = row[this.cfg.series[k].k];
+        if (sv === null) continue;
+        ctx.beginPath(); ctx.arc(hx, Y(sv), 4, 0, 6.2832);
+        ctx.fillStyle = '#171d25'; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = this.cfg.series[k].c; ctx.stroke();
+      }
+    }
+  };
+
+  Chart.prototype.onMove = function (e) {
+    var rows = this.rows;
+    if (!rows.length) return;
+    var g = this.geom(), rect = this.canvas.getBoundingClientRect();
+    var px = e.clientX - rect.left;
+    var t0 = rows[0].t, t1 = rows[rows.length - 1].t;
+    var t = t0 + (px - g.l) / (g.w - g.l - g.r) * (t1 - t0);
+
+    // wyszukiwanie binarne najbliższego punktu
+    var lo = 0, hi = rows.length - 1;
+    while (hi - lo > 1) { var m = (lo + hi) >> 1; if (rows[m].t < t) lo = m; else hi = m; }
+    var idx = Math.abs(rows[lo].t - t) <= Math.abs(rows[hi].t - t) ? lo : hi;
+    this.hover = idx;
+
+    var row = rows[idx], html = '<div class="t">' + fmtDate(row.t, this.stepMs < 86400000, days >= 183) + '</div>';
+    for (var s = 0; s < this.cfg.series.length; s++) {
+      var se = this.cfg.series[s];
+      html += '<div class="r"><i style="background:' + se.c + '"></i>' + se.l + '<b>' + this.fmtVal(row[se.k]) + '</b></div>';
+    }
+    this.tip.innerHTML = html;
+    this.tip.style.display = 'block';
+
+    var hx = g.l + (row.t - t0) / ((t1 - t0) || 1) * (g.w - g.l - g.r);
+    var tw = this.tip.offsetWidth;
+    var left = hx + 12;
+    if (left + tw > g.w) left = hx - tw - 12;
+    this.tip.style.left = Math.max(0, left) + 'px';
+    this.draw();
+  };
+
+  var chartObjs = [];
+  var chartReq = 0, chartAbort = null;
+  function buildCharts() {
+    var root = $('charts');
+    for (var i = 0; i < CHARTS.length; i++) chartObjs.push(new Chart(CHARTS[i], root));
+  }
+
+  function loadCharts() {
+    var med = MEDIAN[days] || 60;
+    var url = 'https://api.thingspeak.com/channels/' + CHANNEL + '/feeds.json?days=' + days +
+              '&median=' + med + '&round=2&results=8000';
+    chartObjs.forEach(function (c) { c.showMsg('Ładowanie…'); });
+
+    var myReq = ++chartReq;
+    if (chartAbort) chartAbort.abort();
+    var ctrl = window.AbortController ? new AbortController() : null;
+    chartAbort = ctrl;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 45000);
+
+    fetch(url, ctrl ? { signal: ctrl.signal } : undefined)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        clearTimeout(timer);
+        if (myReq !== chartReq) return;
+        var rows = (data.feeds || []).map(function (f) {
+          var v1 = num(f.field6), v2 = num(f.field7);
+          if (v1 !== null && v1 <= 0) v1 = null;
+          if (v2 !== null && v2 <= 0) v2 = null;
+          var rf = v1 !== null || v2 !== null;   // brak napięcia = brak odbioru z czujnika zewnętrznego
+          return {
+            t: new Date(f.created_at).getTime(),
+            tIn: num(f.field1), hIn: num(f.field2),
+            tOut: rf ? num(f.field3) : null,
+            hOut: rf ? num(f.field4) : null,
+            p: num(f.field5), v1: v1, v2: v2
+          };
+        });
+        chartObjs.forEach(function (c) { c.showMsg(''); c.setData(rows, med * 60000); });
+      })
+      .catch(function (err) {
+        clearTimeout(timer);
+        if (myReq !== chartReq) return;   // zapytanie zastąpione nowszym
+        console.error('Błąd pobierania wykresów:', err);
+        var text = err && err.name === 'AbortError' ? 'Przekroczono czas – wybierz krótszy zakres' : 'Nie udało się pobrać danych';
+        chartObjs.forEach(function (c) { c.showMsg(text); });
+      });
+  }
+
+  $('range').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    days = parseInt(b.getAttribute('data-days'), 10);
+    var all = this.querySelectorAll('button');
+    for (var i = 0; i < all.length; i++) all[i].classList.toggle('active', all[i] === b);
+    loadCharts();
+  });
+
+  var rz;
+  window.addEventListener('resize', function () {
+    clearTimeout(rz);
+    rz = setTimeout(function () { chartObjs.forEach(function (c) { c.draw(); }); }, 100);
+  });
+
+  buildCharts();
+  loadCharts();
+  setInterval(loadCharts, 300000);
+
+  updateData();
+  setInterval(updateData, 15000);
+  updateTrend();
+  setInterval(updateTrend, 600000);
+</script>
 </body>
 </html>
