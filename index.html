@@ -18,6 +18,34 @@
     --ok: #4cd694;
     --warn: #ffc247;
     --bad: #ff6b6b;
+    --grid: #232c38;
+    --cursor: rgba(232,237,243,.35);
+    --tip-bg: rgba(15,20,25,.94);
+    --msg-bg: rgba(23,29,37,.7);
+    --cloud: #d5dde7;
+    --cloud-dark: #8a98aa;
+    --moon: #f3e9b8;
+    --star: #ffffff;
+  }
+  [data-theme="light"] {
+    --bg: #f3f6fa;
+    --surface: #ffffff;
+    --surface-2: #edf2f7;
+    --border: #d7e0ea;
+    --text: #16202a;
+    --muted: #5c6b7a;
+    --accent: #1d76d2;
+    --ok: #169c5b;
+    --warn: #d98200;
+    --bad: #dc3545;
+    --grid: #e3e9f0;
+    --cursor: rgba(22,32,42,.35);
+    --tip-bg: rgba(255,255,255,.96);
+    --msg-bg: rgba(255,255,255,.75);
+    --cloud: #9aa7b8;
+    --cloud-dark: #6c7a8c;
+    --moon: #e0b84c;
+    --star: #7b8a9c;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -28,6 +56,7 @@
     min-height: 100vh;
     padding: 16px;
     line-height: 1.4;
+    transition: background .25s, color .25s;
   }
   .wrap { max-width: 1000px; margin: 0 auto; }
 
@@ -38,6 +67,16 @@
   }
   header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: .2px; }
   header h1 small { display: block; font-size: .72rem; font-weight: 400; color: var(--muted); margin-top: 2px; }
+  .head-right { display: flex; align-items: center; gap: 8px; }
+  .theme-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 999px; cursor: pointer;
+    transition: background .2s, color .2s, border-color .2s;
+  }
+  .theme-btn:hover { color: var(--text); border-color: var(--accent); }
+  .theme-btn svg { width: 15px; height: 15px; }
   .status {
     display: flex; align-items: center; gap: 8px; white-space: nowrap;
     font-size: .75rem; color: var(--muted);
@@ -66,6 +105,7 @@
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 16px;
+    transition: background .25s, border-color .25s;
   }
   .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .card-title {
@@ -95,7 +135,7 @@
   @media (prefers-reduced-motion: reduce) { .wx * { animation: none !important; } }
 
   .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .metric { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+  .metric { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; transition: background .25s; }
   .metric .lbl {
     display: flex; align-items: center; gap: 6px;
     font-size: .68rem; text-transform: uppercase; letter-spacing: .8px; color: var(--muted);
@@ -126,7 +166,7 @@
     padding: 5px 14px; cursor: pointer; transition: background .2s, color .2s;
   }
   .range button:hover { color: var(--text); }
-  .range button.active { background: var(--accent); color: #07121d; }
+  .range button.active { background: var(--accent); color: #ffffff; }
 
   .chart-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
   @media (min-width: 720px) { .chart-grid { grid-template-columns: 1fr 1fr; } }
@@ -137,6 +177,7 @@
     border-radius: 14px;
     padding: 14px 14px 10px;
     min-width: 0;
+    transition: background .25s, border-color .25s;
   }
   .chart-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
   .chart-top h3 { font-size: .8rem; font-weight: 600; color: var(--text); }
@@ -150,8 +191,8 @@
   .chart-wrap canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: crosshair; }
   .tip {
     position: absolute; top: 6px; display: none; pointer-events: none; z-index: 2;
-    background: rgba(15,20,25,.94); border: 1px solid var(--border); border-radius: 8px;
-    padding: 6px 9px; font-size: .72rem; white-space: nowrap; box-shadow: 0 6px 20px rgba(0,0,0,.4);
+    background: var(--tip-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 9px; font-size: .72rem; white-space: nowrap; box-shadow: 0 6px 20px rgba(0,0,0,.18);
   }
   .tip .t { color: var(--muted); margin-bottom: 3px; }
   .tip .r { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
@@ -159,17 +200,27 @@
   .tip .r b { margin-left: auto; padding-left: 10px; font-weight: 600; }
   .msg {
     position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
-    font-size: .78rem; color: var(--muted); background: rgba(23,29,37,.7); border-radius: 10px;
+    font-size: .78rem; color: var(--muted); background: var(--msg-bg); border-radius: 10px;
   }
 
 </style>
+<script>
+  (function () {
+    var saved = localStorage.getItem('theme');
+    var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  })();
+</script>
 </head>
 <body>
 <div class="wrap">
 
   <header>
     <h1>Stacja pogodowa<small id="last-update">Ładowanie danych…</small></h1>
-    <div class="status" id="status"><span class="dot"></span><span id="status-text">Offline</span></div>
+    <div class="head-right">
+      <button class="theme-btn" id="theme-toggle" type="button" title="Przełącz motyw" aria-label="Przełącz motyw"></button>
+      <div class="status" id="status"><span class="dot"></span><span id="status-text">Offline</span></div>
+    </div>
   </header>
 
   <div class="grid">
@@ -192,7 +243,7 @@
       <div class="metrics">
         <div class="metric">
           <div class="lbl">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#6fd3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2f8cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
             Wilgotność
           </div>
           <div class="val"><span id="outside_humidity">--</span><small>%</small></div>
@@ -225,7 +276,7 @@
       <div class="metrics">
         <div class="metric">
           <div class="lbl">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#6fd3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2f8cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>
             Wilgotność
           </div>
           <div class="val"><span id="humidity">--</span><small>%</small></div>
@@ -284,11 +335,40 @@
     return withTime ? s + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) : s;
   }
   function fmtHour(t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
   function setStatus(state, text) {
     $('status').className = 'status ' + state;
     $('status-text').textContent = text;
   }
+
+  /* =====================================================
+     Motyw jasny / ciemny
+     ===================================================== */
+  var SUN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+  var MOON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+
+  function applyTheme(theme) {
+    var isLight = theme === 'light';
+    if (isLight) document.documentElement.setAttribute('data-theme', 'light');
+    else document.documentElement.removeAttribute('data-theme');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', isLight ? '#f3f6fa' : '#0f1419');
+    var btn = $('theme-toggle');
+    if (btn) {
+      btn.innerHTML = isLight ? MOON_ICON : SUN_ICON;
+      btn.title = isLight ? 'Przełącz na motyw ciemny' : 'Przełącz na motyw jasny';
+      btn.setAttribute('aria-label', btn.title);
+    }
+    if (typeof renderWeather === 'function') renderWeather();
+    if (typeof chartObjs !== 'undefined') chartObjs.forEach(function (c) { c.draw(); });
+  }
+
+  $('theme-toggle').addEventListener('click', function () {
+    var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', next);
+    applyTheme(next);
+  });
 
   /* =====================================================
      Bateria / ikona pogody
@@ -351,7 +431,10 @@
   }
 
   function weatherSvg(kind, night, temp, standalone) {
-    var CL = '#d5dde7', CLD = '#8a98aa', MOON = '#f3e9b8';
+    var CL = standalone ? '#d5dde7' : (cssVar('--cloud') || '#d5dde7');
+    var CLD = standalone ? '#8a98aa' : (cssVar('--cloud-dark') || '#8a98aa');
+    var MOON = standalone ? '#f3e9b8' : (cssVar('--moon') || '#f3e9b8');
+    var STAR = standalone ? '#ffffff' : (cssVar('--star') || '#ffffff');
     var SUN = temp >= 28 ? '#ff8a3d' : '#ffc247';
 
     function cloud(fill, tr) {
@@ -372,9 +455,9 @@
       return '<path transform="' + tr + '" fill="' + MOON + '" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
     }
     function stars() {
-      return '<circle class="twinkle" cx="52" cy="14" r="1.8" fill="#fff"/>' +
-             '<circle class="twinkle" cx="56" cy="30" r="1.3" fill="#fff" style="animation-delay:.8s"/>' +
-             '<circle class="twinkle" cx="12" cy="12" r="1.3" fill="#fff" style="animation-delay:1.6s"/>';
+      return '<circle class="twinkle" cx="52" cy="14" r="1.8" fill="' + STAR + '"/>' +
+             '<circle class="twinkle" cx="56" cy="30" r="1.3" fill="' + STAR + '" style="animation-delay:.8s"/>' +
+             '<circle class="twinkle" cx="12" cy="12" r="1.3" fill="' + STAR + '" style="animation-delay:1.6s"/>';
     }
 
     var inner = '';
@@ -481,15 +564,15 @@
   var CHARTS = [
     { title: 'Temperatura', unit: ' °C', dec: 1, minSpan: 4, series: [
         { k: 'tOut', l: 'Na zewnątrz',  c: '#ff5a36' },
-        { k: 'tIn',  l: 'W domu',       c: '#e69a82' } ] },
+        { k: 'tIn',  l: 'W domu',       c: '#d97b62' } ] },
     { title: 'Wilgotność', unit: ' %', dec: 0, minSpan: 10, series: [
         { k: 'hOut', l: 'Na zewnątrz',  c: '#2f8cff' },
-        { k: 'hIn',  l: 'W domu',       c: '#8fb4e0' } ] },
+        { k: 'hIn',  l: 'W domu',       c: '#6e9cd4' } ] },
     { title: 'Ciśnienie', unit: ' hPa', dec: 0, minSpan: 6, series: [
-        { k: 'p',    l: 'Ciśnienie',    c: '#b6a6ff' } ] },
+        { k: 'p',    l: 'Ciśnienie',    c: '#8a72f5' } ] },
     { title: 'Napięcie baterii', unit: ' V', dec: 2, minSpan: 0.3, series: [
-        { k: 'v1',   l: 'A1',           c: '#4cd694' },
-        { k: 'v2',   l: 'A2',           c: '#f2d34f' } ] }
+        { k: 'v1',   l: 'A1',           c: '#22b573' },
+        { k: 'v2',   l: 'A2',           c: '#e0b422' } ] }
   ];
 
   // Mediana w oknach czasowych (odporna na zera, gdy brak odbioru RF)
@@ -590,9 +673,14 @@
     ctx.clearRect(0, 0, g.w, g.h);
     ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
+    var mutedColor = cssVar('--muted') || '#8593a3';
+    var gridColor = cssVar('--grid') || '#232c38';
+    var surfaceColor = cssVar('--surface') || '#171d25';
+    var cursorColor = cssVar('--cursor') || 'rgba(232,237,243,.35)';
+
     var rows = this.rows, yr = this.yRange();
     if (!rows.length || !yr) {
-      ctx.fillStyle = '#8593a3'; ctx.textAlign = 'center';
+      ctx.fillStyle = mutedColor; ctx.textAlign = 'center';
       ctx.fillText('Brak danych', g.w / 2, g.h / 2);
       return;
     }
@@ -603,8 +691,8 @@
     var Y = function (v) { return g.t + (1 - (v - yr.min) / (yr.max - yr.min)) * plotH; };
 
     // Siatka pozioma + etykiety osi Y
-    ctx.strokeStyle = '#232c38'; ctx.lineWidth = 1;
-    ctx.fillStyle = '#8593a3'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = gridColor; ctx.lineWidth = 1;
+    ctx.fillStyle = mutedColor; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     var ticks = 4;
     for (var i = 0; i <= ticks; i++) {
       var val = yr.min + (yr.max - yr.min) * i / ticks, y = Math.round(Y(val)) + 0.5;
@@ -659,14 +747,14 @@
     // Kursor
     if (this.hover !== null) {
       var row = rows[this.hover], hx = X(row.t);
-      ctx.strokeStyle = 'rgba(232,237,243,.35)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = cursorColor; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
       ctx.beginPath(); ctx.moveTo(Math.round(hx) + 0.5, g.t); ctx.lineTo(Math.round(hx) + 0.5, g.t + plotH); ctx.stroke();
       ctx.setLineDash([]);
       for (var k = 0; k < this.cfg.series.length; k++) {
         var sv = row[this.cfg.series[k].k];
         if (sv === null) continue;
         ctx.beginPath(); ctx.arc(hx, Y(sv), 4, 0, 6.2832);
-        ctx.fillStyle = '#171d25'; ctx.fill();
+        ctx.fillStyle = surfaceColor; ctx.fill();
         ctx.lineWidth = 2; ctx.strokeStyle = this.cfg.series[k].c; ctx.stroke();
       }
     }
@@ -765,6 +853,7 @@
     rz = setTimeout(function () { chartObjs.forEach(function (c) { c.draw(); }); }, 100);
   });
 
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
   buildCharts();
   loadCharts();
   setInterval(loadCharts, 300000);
