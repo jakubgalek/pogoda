@@ -206,6 +206,9 @@
   .chart-top h3 { font-size: .8rem; font-weight: 600; color: var(--text); }
   .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .72rem; color: var(--muted); }
   .legend .it { display: inline-flex; align-items: baseline; gap: 6px; }
+  .legend .it.toggleable { cursor: pointer; user-select: none; padding: 2px 6px; margin: -2px -6px; border-radius: 6px; transition: opacity .2s, background .2s; }
+  .legend .it.toggleable:hover { background: var(--surface-2); }
+  .legend .it.off { opacity: .42; text-decoration: line-through; }
   .legend .sw { width: 8px; height: 8px; border-radius: 50%; align-self: center; }
   .legend b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
   .legend em { font-style: normal; font-size: .66rem; opacity: .85; font-variant-numeric: tabular-nums; }
@@ -633,17 +636,17 @@
      ===================================================== */
   var CHARTS = [
     { title: 'Temperatura', unit: ' °C', dec: 1, minSpan: 4, series: [
-        { k: 'tOut', l: 'Na zewnątrz',  c: '#ff5a36' },
-        { k: 'tIn',  l: 'W domu',       c: '#d97b62' } ] },
+        { k: 'tOut', l: 'Na zewnątrz',  c: '#ff5a36', toggleable: true },
+        { k: 'tIn',  l: 'W domu',       c: '#d97b62', toggleable: true } ] },
     { title: 'Wilgotność', unit: ' %', dec: 0, minSpan: 10, series: [
-        { k: 'hOut', l: 'Na zewnątrz',  c: '#2f8cff' },
-        { k: 'hIn',  l: 'W domu',       c: '#6e9cd4' } ] },
+        { k: 'hOut', l: 'Na zewnątrz',  c: '#2f8cff', toggleable: true },
+        { k: 'hIn',  l: 'W domu',       c: '#6e9cd4', toggleable: true } ] },
     { title: 'Ciśnienie', unit: ' hPa', dec: 0, minSpan: 6, series: [
         { k: 'p',    l: 'Ciśnienie',    c: '#8a72f5' } ] },
     { title: 'Napięcie baterii', unit: ' V', dec: 2, minSpan: 0.3, series: [
-        { k: 'v1',   l: 'Zewn. A1',     c: '#22b573' },
-        { k: 'v2',   l: 'Zewn. A2',     c: '#e0b422' },
-        { k: 'v3',   l: 'Stacja',       c: '#4aa8d8' } ] }
+        { k: 'v1',   l: 'Zewn. A1',     c: '#E0B422', toggleable: true },
+        { k: 'v2',   l: 'Zewn. A2',     c: '#9E6E00', toggleable: true },
+        { k: 'v3',   l: 'Stacja',       c: '#22b573', toggleable: true } ] }
   ];
 
   // Mediana w oknach czasowych (odporna na zera, gdy brak odbioru RF)
@@ -655,6 +658,12 @@
     this.rows = [];
     this.hover = null;
     this.stepMs = 3600000;
+    this.storageKey = 'chart_hidden_' + cfg.title;
+    this.hidden = {};
+    try {
+      var saved = JSON.parse(localStorage.getItem(this.storageKey));
+      if (saved && typeof saved === 'object') this.hidden = saved;
+    } catch (e) {}
 
     var el = document.createElement('div');
     el.className = 'chart';
@@ -673,6 +682,15 @@
     this.canvas.addEventListener('pointermove', function (e) { self.onMove(e); });
     this.canvas.addEventListener('pointerdown', function (e) { self.onMove(e); });
     this.canvas.addEventListener('pointerleave', function () { self.hover = null; self.tip.style.display = 'none'; self.draw(); });
+    this.legend.addEventListener('click', function (e) {
+      var item = e.target.closest('.it.toggleable');
+      if (!item) return;
+      var k = item.getAttribute('data-k');
+      self.hidden[k] = !self.hidden[k];
+      try { localStorage.setItem(self.storageKey, JSON.stringify(self.hidden)); } catch (err) {}
+      self.buildLegend(self.rows.length > 0);
+      self.draw();
+    });
     this.buildLegend(null);
   }
 
@@ -707,7 +725,9 @@
       }
       var range = last === null ? '' :
         '<em>' + mn.toFixed(this.cfg.dec) + ' – ' + mx.toFixed(this.cfg.dec) + '</em>';
-      html += '<span class="it"><span class="sw" style="background:' + se.c + '"></span>' +
+      var cls = 'it' + (se.toggleable ? ' toggleable' : '') + (this.hidden[se.k] ? ' off' : '');
+      var attrs = se.toggleable ? ' data-k="' + se.k + '" title="' + (this.hidden[se.k] ? 'Kliknij, aby pokazać ' : 'Kliknij, aby ukryć ') + se.l + '"' : '';
+      html += '<span class="' + cls + '"' + attrs + '><span class="sw" style="background:' + se.c + '"></span>' +
               se.l + ' <b>' + this.fmtVal(last) + '</b> ' + range + '</span>';
     }
     this.legend.innerHTML = html;
@@ -721,6 +741,7 @@
     var mn = Infinity, mx = -Infinity;
     for (var i = 0; i < this.rows.length; i++) {
       for (var s = 0; s < this.cfg.series.length; s++) {
+        if (this.hidden[this.cfg.series[s].k]) continue;
         var v = this.rows[i][this.cfg.series[s].k];
         if (v === null) continue;
         if (v < mn) mn = v; if (v > mx) mx = v;
@@ -783,7 +804,9 @@
     // Serie
     var gapMs = this.stepMs * 3;
     for (var s = 0; s < this.cfg.series.length; s++) {
-      var se = this.cfg.series[s], segs = [], cur = [], prevT = null;
+      var se = this.cfg.series[s];
+      if (this.hidden[se.k]) continue;
+      var segs = [], cur = [], prevT = null;
       for (var r = 0; r < rows.length; r++) {
         var v = rows[r][se.k];
         if (v === null || (prevT !== null && rows[r].t - prevT > gapMs)) {
@@ -822,6 +845,7 @@
       ctx.beginPath(); ctx.moveTo(Math.round(hx) + 0.5, g.t); ctx.lineTo(Math.round(hx) + 0.5, g.t + plotH); ctx.stroke();
       ctx.setLineDash([]);
       for (var k = 0; k < this.cfg.series.length; k++) {
+        if (this.hidden[this.cfg.series[k].k]) continue;
         var sv = row[this.cfg.series[k].k];
         if (sv === null) continue;
         ctx.beginPath(); ctx.arc(hx, Y(sv), 4, 0, 6.2832);
@@ -848,6 +872,7 @@
     var row = rows[idx], html = '<div class="t">' + fmtDate(row.t, this.stepMs < 86400000, days >= 183) + '</div>';
     for (var s = 0; s < this.cfg.series.length; s++) {
       var se = this.cfg.series[s];
+      if (this.hidden[se.k]) continue;
       html += '<div class="r"><i style="background:' + se.c + '"></i>' + se.l + '<b>' + this.fmtVal(row[se.k]) + '</b></div>';
     }
     this.tip.innerHTML = html;
